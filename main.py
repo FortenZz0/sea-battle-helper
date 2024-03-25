@@ -12,7 +12,7 @@ class SeaBattleHelper:
 		self.width = 10
 		self.height = 10
 		
-		self.area = [["0" for i in range(self.width)] for j in range(self.height)]
+		self.area = [["0" for _ in range(self.width)] for __ in range(self.height)]
 		
 		self.ships_count = ships_count
 		self.ships_cells = ships_cells
@@ -26,8 +26,8 @@ class SeaBattleHelper:
 		
 		self.headers = list("АБВГДЕЖЗИК")
 		
-		# 0 - просто символ (добавляется перед созданием таблицы)
-		# 1 - отформатированный символ (на него заменяется [0] ПОСЛЕ создания таблицы)
+		# [0] - просто символ (добавляется перед созданием таблицы)
+		# [1] - отформатированный символ (на него заменяется [0] ПОСЛЕ создания таблицы)
 		self.symbols = {
 			"miss": ("O", "[bright_black]О[/bright_black]"),
 			"hit": ("X", "[gold1]X[/gold1]")
@@ -47,7 +47,7 @@ class SeaBattleHelper:
 	
 	
 	# Поиск клетки с наивысшей вероятностью нахождения в ней корабля
-	def find_max(self) -> ([(int, int)], str):  # ([max_cells*], max_value)
+	def find_max(self) -> ([(int, int)], str):  # ([*max_cells], max_value)
 		max_cells = []
 		max_value = 0
 		
@@ -68,7 +68,19 @@ class SeaBattleHelper:
 	
 	# Заполнение таблицы вероятностей, относительно попаданий
 	def update_hits(self) -> None:
-		self._checked_hit_cells = set()
+		def update_cells(start_cell: (int, int), line_direction: (int, int)):
+			if sum(line_direction):
+				cells = self._get_line_cells(*start_cell, line_direction, True)
+			else:
+				cells = self._get_cross_cells(*start_cell)
+			
+			for cell in cells:
+				if not self.area[cell[1]][cell[0]].isdigit():
+					continue
+				
+				add_value = self.biggest_ship() - self._distance(cell, hit_cells[0])
+				self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 10)
+		
 		
 		for y in range(self.height):
 			for x in range(self.width):
@@ -82,114 +94,106 @@ class SeaBattleHelper:
 				else:
 					continue
 				
-				is_one_hit = True
-				direction = (0, 0)
+				hit_cells = self.get_ship_cells(hit_cells[0])
 				
-				for cell in self._get_around_cells(x, y, True):
-					if self.area[cell[1]][cell[0]] == self.symbols["hit"][0]:
-						is_one_hit = False
-						direction = (cell[0] - x, cell[1] - y)
-				
-				if is_one_hit:
-					for cell in self._get_cross_cells(x, y):
-						add_value = self.biggest_ship() - self._distance(cell, (x, y))
-						self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 6)
+				if len(hit_cells) == 1:
+					update_cells((x, y), (0, 0))
 				else:
-					new_cell = (
-						hit_cells[0][0] + direction[0],
-						hit_cells[0][1] + direction[1]
-					)
-					
-					while True:
-						if not (0 <= new_cell[0] < self.width and 0 <= new_cell[1] < self.height):
-							break
-						
-						if self.area[new_cell[1]][new_cell[0]] != self.symbols["hit"][0]:
-							break
-							
-						if not new_cell in self._checked_hit_cells:
-							hit_cells.append(new_cell)
-							self._checked_hit_cells.add(new_cell)
-						
-						new_cell = (
-							new_cell[0] + direction[0],
-							new_cell[1] + direction[1]
-						)
 					
 					direction_1 = (
 						hit_cells[1][0] - hit_cells[0][0],
 						hit_cells[1][1] - hit_cells[0][1]
 					)
 					
-					for cell in self._get_line_cells(*hit_cells[0], direction_1, True):
-						if not self.area[cell[1]][cell[0]].isdigit():
-							continue
-						
-						add_value = self.biggest_ship() - self._distance(cell, hit_cells[0])
-						self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 6)
-					
 					direction_2 = (
 						hit_cells[-2][0] - hit_cells[-1][0],
 						hit_cells[-2][1] - hit_cells[-1][1]
 					)
 					
-					for cell in self._get_line_cells(*hit_cells[-1], direction_2, True):
-						if not self.area[cell[1]][cell[0]].isdigit():
-							continue
-						
-						add_value = self.biggest_ship() - self._distance(cell, hit_cells[-1])
-						self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 6)
+					update_cells(hit_cells[0], direction_1)
+					update_cells(hit_cells[-1], direction_2)
 				
 				if not hit_cells in self._damaged_ships:
 					self._damaged_ships.append(hit_cells)
 	
 	
+	# Получаем все клетки корабля
+	def get_ship_cells(self, start_cell: (int, int)) -> [(int, int)]:
+		self._checked_hit_cells = set()
+		
+		cells = [start_cell]
+		
+		is_one_hit = True
+		direction = (0, 0)
+		
+		for cell in self._get_around_cells(*start_cell, True):
+			if self.area[cell[1]][cell[0]] == self.symbols["hit"][0]:
+				is_one_hit = False
+				direction = (cell[0] - start_cell[0], cell[1] - start_cell[1])
+				
+		if not is_one_hit:
+			new_cell = (
+				cells[0][0] + direction[0],
+				cells[0][1] + direction[1]
+			)
+			
+			while True:
+				if not (0 <= new_cell[0] < self.width and 0 <= new_cell[1] < self.height) or \
+					self.area[new_cell[1]][new_cell[0]] != self.symbols["hit"][0]:
+					break
+				
+				if not new_cell in self._checked_hit_cells:
+					cells.append(new_cell)
+					self._checked_hit_cells.add(new_cell)
+				
+				new_cell = (
+					new_cell[0] + direction[0],
+					new_cell[1] + direction[1]
+				)
+			
+		return cells
+	
+	
 	# Заполнение таблицы вероятностей
 	def fill_area(self) -> None:
-		self.update_hits()
-		# return None
+		def update_by_ship(start_cell: (int, int), direction: (int, int)) -> None:
+			cells = [
+				(
+					start_cell[0] + i * direction[0],
+					start_cell[1] + i * direction[1])
+				for i in range(ship)
+			]
+			
+			valid = True
+			
+			for cell in cells:
+				if cell[0] >= self.width or cell[1] >= self.height or self.area[cell[1]][cell[0]] == self.symbols["miss"][0]:
+					valid = False
+					break
+			
+			if not valid: return
+			
+			for cell in cells:
+				if self.area[cell[1]][cell[0]] != self.symbols["hit"][0]:
+					self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + 1)
 		
-		# Заполняем поле относительно кораблей
+		
+		# Заполняем поле относительно попаданий
+		self.update_hits()
+		
+		
+		# Заполняем поле, расставляя корабли
 		for ship in compress(self.ships_cells, self.ships_alive):
-			# Проверяем горизонтальные позиции
 			for y in range(self.height):
 				for x in range(self.width):
+					# Проверяем горизонтальные позиции
+					update_by_ship((x, y), (1, 0))
 					
-					cells = [(x + i, y) for i in range(ship)]
+					if ship == 1: continue
 					
-					valid = True
-					
-					for cell in cells:
-						if cell[0] >= self.width or self.area[cell[1]][cell[0]] == self.symbols["miss"][0]:
-							valid = False
-							break
-					
-					if not valid: continue
-					
-					for cell in cells:
-						if self.area[cell[1]][cell[0]] != self.symbols["hit"][0]:
-							self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + 1)
+					# Проверяем вертикальные позиции
+					update_by_ship((x, y), (0, 1))
 			
-			if ship == 1: continue
-			
-			# Проверяем вертикальные позиции
-			for y in range(self.height):
-				for x in range(self.width):
-					cells = [(x, y + i) for i in range(ship)]
-					
-					valid = True
-					
-					for cell in cells:
-						if cell[1] >= self.height or self.area[cell[1]][cell[0]] == self.symbols["miss"][0]:
-							valid = False
-							break
-					
-					if not valid: continue
-					
-					for cell in cells:
-						if self.area[cell[1]][cell[0]] != self.symbols["hit"][0]:
-							self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + 1)
-	
 	
 	# Получаем ячейки вокруг одной клетки
 	def _get_around_cells(self, x: int, y: int, include_symbols: bool = False) -> [(int, int)]:
@@ -253,7 +257,7 @@ class SeaBattleHelper:
 	
 	
 	# Расстояние между двумя клетками
-	def _distance(self, a: (int, int), b: (int, int)) -> float:
+	def _distance(self, a: (int, int), b: (int, int)) -> int:
 		return int(((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) ** 0.5)
 	
 	
@@ -282,32 +286,10 @@ class SeaBattleHelper:
 		if not killed:
 			return
 		
-		is_one_hit = True
-		direction = (0, 0)
-		
-		for cell in self._get_around_cells(x, y, True):
-			if self.area[cell[1]][cell[0]] == self.symbols["hit"][0]:
-				is_one_hit = False
-				direction = (cell[0] - x, cell[1] - y)
-		
 		new_cell = (x, y)
 		ship_cells = [new_cell]
 		
-		if not is_one_hit:
-			while True:
-				if not (0 <= new_cell[0] < self.width and 0 <= new_cell[1] < self.height):
-					break
-				
-				if self.area[new_cell[1]][new_cell[0]] != self.symbols["hit"][0]:
-					break
-					
-				if not new_cell in ship_cells:
-					ship_cells.append(new_cell)
-				
-				new_cell = (
-					new_cell[0] + direction[0],
-					new_cell[1] + direction[1]
-				)
+		ship_cells = self.get_ship_cells(ship_cells[0])
 		
 		for cell in ship_cells:
 			for ar_cell in self._get_around_cells(*cell):
@@ -400,8 +382,10 @@ if __name__ == "__main__":
 		helper.clear_area()
 		helper.fill_area()
 		
+		
 		print("Таблица вероятностей:\n")
 		helper.print_pretty_area()
+		
 		
 		print("\nОсталось кораблей:")
 		for i in range(3, -1, -1):
@@ -412,21 +396,26 @@ if __name__ == "__main__":
 				f"{helper.ships_count[i]}"
 			)
 		
+		
 		print("\nЖелательно стреляй в одну из следующих клеток:\n  ", end="")
+		
 		max_cells = helper.find_max()[0]
-		inp_def = helper.humanize_cell(*max_cells[0])
+		inp_default = helper.humanize_cell(*max_cells[0])
+		
 		for cell in max_cells:
 			print(f"[spring_green2]{helper.humanize_cell(*cell)}", end=" ")
+		
 		
 		print("\n\n")
 		target_cell = choice(
 			"Клетка для выстрела",
 			human_cells,
-			default=inp_def,
+			default=inp_default,
 			show_default=True,
 			upper_input=True
 		)
 		coords = helper.cell_to_coords(target_cell)
+		
 		
 		damage = choice(
 			"Попал? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
@@ -437,17 +426,15 @@ if __name__ == "__main__":
 		) in "да1"
 		
 		if damage:
-			if sum(helper.ships_count) != helper.ships_count[0]: # Проверка на то, что остались только 1-палубные корабли
-				kill = choice(
-					"Убил? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
-					["д", "да", "1", "н", "нет", "0"],
-					default="нет",
-					show_default=True,
-					lower_input=True
-				) in "да1"
-				helper.hit(*coords, kill)
-			else:
-				helper.hit(*coords, True)
+			kill = choice(
+				"Убил? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
+				["д", "да", "1", "н", "нет", "0"],
+				default="нет",
+				show_default=True,
+				lower_input=True
+			) in "да1"
+			
+			helper.hit(*coords, kill)
 		else:
 			helper.miss(*coords)
 		
