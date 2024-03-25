@@ -1,6 +1,9 @@
 from itertools import compress
 from tabulate import tabulate
 from rich import print
+from rich.panel import Panel
+from rich.align import Align
+from rich.padding import Padding
 import os
 
 
@@ -262,8 +265,8 @@ class SeaBattleHelper:
 	
 	
 	# Конвертация "программных" координат клетки в "человеческие"
-	def humanize_cell(self, x: int, y: int) -> str:
-		return self.headers[x] + str(y + 1)
+	def humanize_cell(self, cell: (int, int)) -> str:
+		return self.headers[cell[0]] + str(cell[1] + 1)
 	
 	
 	# Конвертация "человеческих" координат клетки в "программные"
@@ -301,7 +304,7 @@ class SeaBattleHelper:
 	
 	
 	# Вывод красивой таблицы с полем
-	def print_pretty_area(self) -> None:
+	def print_pretty_area(self, header) -> None:
 		# подсветка максимальных значений
 		max_chances = self.find_max()
 		
@@ -329,7 +332,18 @@ class SeaBattleHelper:
 		max_value = self.max_chance_format[1](max_chances[1])
 		table = table.replace(self.max_chance_format[0](max_chances[1]), max_value)
 		
-		print(table)
+		panel =	Padding(
+			Panel(
+				Align(table, align="center"),
+				highlight=True,
+				title=header,
+				# expand=False,
+				width=58
+			),
+			pad=(2, 0, 0, 1)
+		)
+		
+		print(panel)
 		
 		# Возвращаем максимальные значения обратно (на всякий случай)
 		for x, y in max_chances[0]:
@@ -376,39 +390,57 @@ if __name__ == "__main__":
 	
 	while True:
 		os.system("cls")
-		print('Программа-помощник для игры [spring_green2]"Морской Бой"[/spring_green2], '
-		      'анализирующая поле противника для предугадывания самых выгодных ходов.\n\n')
+		
+		print(Panel(
+			'Программа-помощник для игры [spring_green2]"Морской Бой"[/spring_green2], '
+			'анализирующая поле противника для предугадывания самых выгодных ходов.',
+			highlight=True,
+			title="[gold1]Sea Battle Helper[/gold1]",
+			width=60
+		))
 		
 		helper.clear_area()
 		helper.fill_area()
 		
 		
-		print("Таблица вероятностей:\n")
-		helper.print_pretty_area()
+		helper.print_pretty_area("[gold1]Таблица вероятностей[/gold1]")
 		
-		
-		print("\nОсталось кораблей:")
-		for i in range(3, -1, -1):
-			alive = helper.ships_alive[i]
-			print(
-				f"[{'gold1' if alive else 'red'}]X {'X ' * i}[/{'gold1' if alive else 'red'}]: "
-				f"{'[red]' if not alive else ''}"
-				f"{helper.ships_count[i]}"
-			)
-		
-		
-		print("\nЖелательно стреляй в одну из следующих клеток:\n  ", end="")
 		
 		max_cells = helper.find_max()[0]
-		inp_default = helper.humanize_cell(*max_cells[0])
 		
-		for cell in max_cells:
-			print(f"[spring_green2]{helper.humanize_cell(*cell)}", end=" ")
+		human_max_cells = list(map(helper.humanize_cell, max_cells))
+		inp_default =  human_max_cells[0]
+		
+		print(Padding(
+			Panel(
+				Align(
+					"[spring_green2]" + " ".join(human_max_cells) + "[/spring_green2]",
+					align="center"
+				),
+				title="[gold1]Наибольшая вероятность[/gold1]",
+				highlight=True,
+				width=58
+			),
+			pad=(1, 0, 1, 1)
+		))
 		
 		
-		print("\n\n")
+		ships = [" Осталось кораблей:"]
+		for i in range(3, -1, -1):
+			alive = helper.ships_alive[i]
+			ships.append(
+				f" [{'gold1' if alive else 'red'}]" # Открывающий тег с цветом
+				f"{' '.join(['X' for _ in range(i + 1)])}" # Визуализация корабля
+				f"[/{'gold1' if alive else 'red'}]: " # Закрывающий тег с цветом и ":"
+				f"{'[red]' if not alive else ''}" # открывающий тег с цветом мёртвого корабля
+				f"{helper.ships_count[i]}" # количество кораблей
+			)
+			
+		print("\n".join(ships))
+		
+		
 		target_cell = choice(
-			"Клетка для выстрела",
+			"\n\n Клетка для выстрела",
 			human_cells,
 			default=inp_default,
 			show_default=True,
