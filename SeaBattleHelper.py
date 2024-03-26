@@ -22,6 +22,7 @@ class SeaBattleHelper:
 		self._checked_hit_cells = set()
 		
 		self.biggest_ship = lambda: max(compress(self.ships_cells, self.ships_alive))
+		self.alive_ships = lambda: compress(self.ships_cells, self.ships_alive)
 		
 		self.headers = list("АБВГДЕЖЗИК")
 		
@@ -70,6 +71,9 @@ class SeaBattleHelper:
 		def update_cells(start_cell: (int, int), line_direction: (int, int)):
 			if sum(line_direction):
 				cells = self._get_line_cells(*start_cell, line_direction, True)
+			
+				if not self._is_valid_cells(cells):
+					return
 			else:
 				cells = self._get_cross_cells(*start_cell)
 			
@@ -79,6 +83,7 @@ class SeaBattleHelper:
 				
 				add_value = self.biggest_ship() - self._distance(cell, hit_cells[0])
 				self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 10)
+		
 		
 		for y in range(self.height):
 			for x in range(self.width):
@@ -152,25 +157,33 @@ class SeaBattleHelper:
 		return cells
 	
 	
+	# Проверка на то, что в данных ячейках может находиться корабль
+	# (Передавать ТОЛЬКО ЛИНИЮ клеток)
+	def _is_valid_cells(self, cells: (int, int)) -> bool:
+		valid = True
+		
+		for cell in cells:
+			if cell[0] >= self.width or cell[1] >= self.height or \
+					self.area[cell[1]][cell[0]] == self.symbols["miss"][0]:
+				valid = False
+				break
+		
+		return valid
+		
+		
 	# Заполнение таблицы вероятностей
 	def fill_area(self) -> None:
 		def update_by_ship(start_cell: (int, int), direction: (int, int)) -> None:
 			cells = [
 				(
 					start_cell[0] + i * direction[0],
-					start_cell[1] + i * direction[1])
+					start_cell[1] + i * direction[1]
+				)
 				for i in range(ship)
 			]
 			
-			valid = True
-			
-			for cell in cells:
-				if cell[0] >= self.width or cell[1] >= self.height or self.area[cell[1]][cell[0]] == \
-						self.symbols["miss"][0]:
-					valid = False
-					break
-			
-			if not valid: return
+			if not self._is_valid_cells(cells):
+				return
 			
 			for cell in cells:
 				if self.area[cell[1]][cell[0]] != self.symbols["hit"][0]:
@@ -214,28 +227,29 @@ class SeaBattleHelper:
 	
 	# Получаем ячейки в форме креста вокруг одной клетки
 	def _get_cross_cells(self, x: int, y: int) -> [(int, int)]:
-		funcs = (
-			lambda a, b, n: (a, b + n),
-			lambda a, b, n: (a - n, b),
-			lambda a, b, n: (a + n, b),
-			lambda a, b, n: (a, b - n),
+		directions = (
+			(0, 1),
+			(1, 0),
+			(0, -1),
+			(-1, 0)
 		)
+		
 		cells = []
 		
-		for i, func in enumerate(funcs):
-			for j in range(1, self.biggest_ship()):
-				new_x, new_y = func(x, y, j)
-				
-				if 0 <= new_x < self.width and 0 <= new_y < self.width and self.area[new_y][new_x].isdigit():
-					cells.append((new_x, new_y))
-				else:
-					break
+		for direction in directions:
+			line = self._get_line_cells(x, y, direction, pass_miss=False)
+			
+			cells += line
 		
 		return cells
 	
 	
 	# Получаем ячейки по одной линии от клетки
-	def _get_line_cells(self, x: int, y: int, direction: (int, int), pass_hits: bool = False) -> [(int, int)]:
+	def _get_line_cells(self,
+	                    x: int, y: int,
+	                    direction: (int, int),
+	                    pass_hits: bool = False,
+	                    pass_miss: bool = False) -> [(int, int)]:
 		cells = []
 		
 		for i in range(1, self.biggest_ship()):
@@ -245,7 +259,9 @@ class SeaBattleHelper:
 			if not (0 <= new_x < self.width and 0 <= new_y < self.width):
 				continue
 			
-			if self.area[new_y][new_x].isdigit() or (pass_hits and self.area[new_y][new_x] == self.symbols["hit"][0]):
+			if self.area[new_y][new_x].isdigit() or \
+					(pass_hits and self.area[new_y][new_x] == self.symbols["hit"][0]) or \
+					(pass_miss and self.area[new_y][new_x] == self.symbols["miss"][0]):
 				cells.append((new_x, new_y))
 			else:
 				break
