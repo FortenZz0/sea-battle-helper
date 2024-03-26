@@ -9,9 +9,9 @@ import os
 
 class SeaBattleHelper:
 	def __init__(
-		self,
-        ships_count: [int] = [4, 3, 2, 1],
-        ships_cells: [int] = [1, 2, 3, 4]
+			self,
+			ships_count: [int] = [4, 3, 2, 1],
+			ships_cells: [int] = [1, 2, 3, 4]
 	) -> None:
 		
 		self.width = 10
@@ -42,14 +42,12 @@ class SeaBattleHelper:
 			lambda x: f"[red]{x}[/red]"
 		)
 	
-	
 	# Очистка поля
 	def clear_area(self, save_symbols: bool = True) -> None:
 		for y in range(self.height):
 			for x in range(self.width):
 				char = self.area[y][x]
 				self.area[y][x] = "0" if char.isdigit() or not save_symbols else char
-	
 	
 	# Поиск клетки с наивысшей вероятностью нахождения в ней корабля
 	def find_max(self) -> ([(int, int)], str):  # ([*max_cells], max_value)
@@ -70,7 +68,6 @@ class SeaBattleHelper:
 		
 		return max_cells, str(max_value)
 	
-	
 	# Заполнение таблицы вероятностей, относительно попаданий
 	def update_hits(self) -> None:
 		def update_cells(start_cell: (int, int), line_direction: (int, int)):
@@ -85,7 +82,6 @@ class SeaBattleHelper:
 				
 				add_value = self.biggest_ship() - self._distance(cell, hit_cells[0])
 				self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 10)
-		
 		
 		for y in range(self.height):
 			for x in range(self.width):
@@ -121,7 +117,6 @@ class SeaBattleHelper:
 				if not hit_cells in self._damaged_ships:
 					self._damaged_ships.append(hit_cells)
 	
-	
 	# Получаем все клетки корабля
 	def get_ship_cells(self, start_cell: (int, int)) -> [(int, int)]:
 		self._checked_hit_cells = set()
@@ -135,7 +130,7 @@ class SeaBattleHelper:
 			if self.area[cell[1]][cell[0]] == self.symbols["hit"][0]:
 				is_one_hit = False
 				direction = (cell[0] - start_cell[0], cell[1] - start_cell[1])
-				
+		
 		if not is_one_hit:
 			new_cell = (
 				cells[0][0] + direction[0],
@@ -144,7 +139,7 @@ class SeaBattleHelper:
 			
 			while True:
 				if not (0 <= new_cell[0] < self.width and 0 <= new_cell[1] < self.height) or \
-					self.area[new_cell[1]][new_cell[0]] != self.symbols["hit"][0]:
+						self.area[new_cell[1]][new_cell[0]] != self.symbols["hit"][0]:
 					break
 				
 				if not new_cell in self._checked_hit_cells:
@@ -155,9 +150,8 @@ class SeaBattleHelper:
 					new_cell[0] + direction[0],
 					new_cell[1] + direction[1]
 				)
-			
+		
 		return cells
-	
 	
 	# Заполнение таблицы вероятностей
 	def fill_area(self) -> None:
@@ -172,7 +166,8 @@ class SeaBattleHelper:
 			valid = True
 			
 			for cell in cells:
-				if cell[0] >= self.width or cell[1] >= self.height or self.area[cell[1]][cell[0]] == self.symbols["miss"][0]:
+				if cell[0] >= self.width or cell[1] >= self.height or self.area[cell[1]][cell[0]] == \
+						self.symbols["miss"][0]:
 					valid = False
 					break
 			
@@ -182,10 +177,8 @@ class SeaBattleHelper:
 				if self.area[cell[1]][cell[0]] != self.symbols["hit"][0]:
 					self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + 1)
 		
-		
 		# Заполняем поле относительно попаданий
 		self.update_hits()
-		
 		
 		# Заполняем поле, расставляя корабли
 		for ship in compress(self.ships_cells, self.ships_alive):
@@ -198,7 +191,6 @@ class SeaBattleHelper:
 					
 					# Вертикальные позиции
 					update_by_ship((x, y), (0, 1))
-			
 	
 	# Получаем ячейки вокруг одной клетки
 	def _get_around_cells(self, x: int, y: int, include_symbols: bool = False) -> [(int, int)]:
@@ -218,7 +210,6 @@ class SeaBattleHelper:
 					cells.append((new_x, new_y))
 		
 		return cells
-	
 	
 	# Получаем ячейки в форме креста вокруг одной клетки
 	def _get_cross_cells(self, x: int, y: int) -> [(int, int)]:
@@ -241,7 +232,6 @@ class SeaBattleHelper:
 		
 		return cells
 	
-	
 	# Получаем ячейки по одной линии от клетки
 	def _get_line_cells(self, x: int, y: int, direction: (int, int), pass_hits: bool = False) -> [(int, int)]:
 		cells = []
@@ -260,16 +250,13 @@ class SeaBattleHelper:
 		
 		return cells
 	
-	
 	# Расстояние между двумя клетками
 	def _distance(self, a: (int, int), b: (int, int)) -> int:
 		return int(((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) ** 0.5)
 	
-	
 	# Конвертация "программных" координат клетки в "человеческие"
 	def humanize_cell(self, cell: (int, int)) -> str:
 		return self.headers[cell[0]] + str(cell[1] + 1)
-	
 	
 	# Конвертация "человеческих" координат клетки в "программные"
 	def cell_to_coords(self, s: str) -> (int, int):
@@ -278,11 +265,9 @@ class SeaBattleHelper:
 		
 		return x, y
 	
-	
 	# Промах
 	def miss(self, x: int, y: int) -> None:
 		self.area[y][x] = self.symbols["miss"][0]
-	
 	
 	# Попадание
 	def hit(self, x: int, y: int, killed: bool) -> None:
@@ -300,7 +285,6 @@ class SeaBattleHelper:
 		self.ships_count[len(ship_cells) - 1] -= 1
 		if self.ships_count[len(ship_cells) - 1] <= 0:
 			self.ships_alive[len(ship_cells) - 1] = False
-	
 	
 	# Вывод красивой таблицы с полем
 	def print_pretty_area(self, header) -> None:
@@ -331,7 +315,7 @@ class SeaBattleHelper:
 		max_value = self.max_chance_format[1](max_chances[1])
 		table = table.replace(self.max_chance_format[0](max_chances[1]), max_value)
 		
-		panel =	Padding(
+		panel = Padding(
 			Panel(
 				Align(table, align="center"),
 				highlight=True,
@@ -400,14 +384,12 @@ if __name__ == "__main__":
 		helper.clear_area()
 		helper.fill_area()
 		
-		
 		helper.print_pretty_area("[gold1]Таблица вероятностей[/gold1]")
-		
 		
 		max_cells = helper.find_max()[0]
 		
 		human_max_cells = list(map(helper.humanize_cell, max_cells))
-		inp_default =  human_max_cells[0]
+		inp_default = human_max_cells[0]
 		
 		print(Padding(
 			Panel(
@@ -422,21 +404,19 @@ if __name__ == "__main__":
 			pad=(1, 0, 1, 1)
 		))
 		
-		
 		ships = [" Осталось кораблей:"]
 		for i in range(3, -1, -1):
 			alive = helper.ships_alive[i]
 			ships.append(
-				f" [{'gold1' if alive else 'red'}]" # Открывающий тег с цветом
-				f"{' '.join(['X' for _ in range(i + 1)])}" # Визуализация корабля
-				f"[/{'gold1' if alive else 'red'}]: " # Закрывающий тег с цветом и ":"
-				f"{'[red]' if not alive else ''}" # открывающий тег с цветом мёртвого корабля
-				f"{helper.ships_count[i]}" # количество кораблей
-				f"{'[/red]' if not alive else ''}" # закрывающий тег с цветом мёртвого корабля и ":"
+				f" [{'gold1' if alive else 'red'}]"  # Открывающий тег с цветом
+				f"{' '.join(['X' for _ in range(i + 1)])}"  # Визуализация корабля
+				f"[/{'gold1' if alive else 'red'}]: "  # Закрывающий тег с цветом и ":"
+				f"{'[red]' if not alive else ''}"  # открывающий тег с цветом мёртвого корабля
+				f"{helper.ships_count[i]}"  # количество кораблей
+				f"{'[/red]' if not alive else ''}"  # закрывающий тег с цветом мёртвого корабля и ":"
 			)
-			
-		print("\n".join(ships) + "\n\n")
 		
+		print("\n".join(ships) + "\n\n")
 		
 		target_cell = choice(
 			" Клетка для выстрела",
@@ -446,7 +426,6 @@ if __name__ == "__main__":
 			upper_input=True
 		)
 		coords = helper.cell_to_coords(target_cell)
-		
 		
 		damage = choice(
 			" Попал? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
