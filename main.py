@@ -8,9 +8,11 @@ import os
 
 
 class SeaBattleHelper:
-	def __init__(self,
-	             ships_count: [int] = [4, 3, 2, 1],
-	             ships_cells: [int] = [1, 2, 3, 4]):
+	def __init__(
+		self,
+        ships_count: [int] = [4, 3, 2, 1],
+        ships_cells: [int] = [1, 2, 3, 4]
+	) -> None:
 		
 		self.width = 10
 		self.height = 10
@@ -189,12 +191,12 @@ class SeaBattleHelper:
 		for ship in compress(self.ships_cells, self.ships_alive):
 			for y in range(self.height):
 				for x in range(self.width):
-					# Проверяем горизонтальные позиции
+					# Горизонтальные позиции
 					update_by_ship((x, y), (1, 0))
 					
 					if ship == 1: continue
 					
-					# Проверяем вертикальные позиции
+					# Вертикальные позиции
 					update_by_ship((x, y), (0, 1))
 			
 	
@@ -241,7 +243,7 @@ class SeaBattleHelper:
 	
 	
 	# Получаем ячейки по одной линии от клетки
-	def _get_line_cells(self, x: int, y: int, direction: (int, int), pass_hits: bool = False):
+	def _get_line_cells(self, x: int, y: int, direction: (int, int), pass_hits: bool = False) -> [(int, int)]:
 		cells = []
 		
 		for i in range(1, self.biggest_ship()):
@@ -289,10 +291,7 @@ class SeaBattleHelper:
 		if not killed:
 			return
 		
-		new_cell = (x, y)
-		ship_cells = [new_cell]
-		
-		ship_cells = self.get_ship_cells(ship_cells[0])
+		ship_cells = self.get_ship_cells((x, y))
 		
 		for cell in ship_cells:
 			for ar_cell in self._get_around_cells(*cell):
@@ -337,7 +336,6 @@ class SeaBattleHelper:
 				Align(table, align="center"),
 				highlight=True,
 				title=header,
-				# expand=False,
 				width=58
 			),
 			pad=(2, 0, 0, 1)
@@ -434,13 +432,14 @@ if __name__ == "__main__":
 				f"[/{'gold1' if alive else 'red'}]: " # Закрывающий тег с цветом и ":"
 				f"{'[red]' if not alive else ''}" # открывающий тег с цветом мёртвого корабля
 				f"{helper.ships_count[i]}" # количество кораблей
+				f"{'[/red]' if not alive else ''}" # закрывающий тег с цветом мёртвого корабля и ":"
 			)
 			
-		print("\n".join(ships))
+		print("\n".join(ships) + "\n\n")
 		
 		
 		target_cell = choice(
-			"\n\n Клетка для выстрела",
+			" Клетка для выстрела",
 			human_cells,
 			default=inp_default,
 			show_default=True,
@@ -450,7 +449,7 @@ if __name__ == "__main__":
 		
 		
 		damage = choice(
-			"Попал? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
+			" Попал? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
 			["д", "да", "1", "н", "нет", "0"],
 			default="нет",
 			show_default=True,
@@ -459,7 +458,7 @@ if __name__ == "__main__":
 		
 		if damage:
 			kill = choice(
-				"Убил? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
+				" Убил? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
 				["д", "да", "1", "н", "нет", "0"],
 				default="нет",
 				show_default=True,
