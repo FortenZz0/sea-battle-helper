@@ -2,6 +2,7 @@ from rich import print
 from rich.panel import Panel
 from rich.align import Align
 from rich.padding import Padding
+from rich.console import Console
 
 import os
 
@@ -12,6 +13,9 @@ import tools
 
 
 if __name__ == "__main__":
+	console = Console()
+	console.set_window_title("Sea Battle Helper -- by FortenZz")
+
 	print(" По умолчанию программа настроена на:")
 	print("  - 1 4-палубный корабль")
 	print("  - 2 3-палубных корабля")
@@ -60,28 +64,36 @@ if __name__ == "__main__":
 	for i in helper.headers:
 		for j in range(helper.height):
 			human_cells.append(i + str(j + 1))
+			
+	header_panel = Panel(
+		'Программа-помощник для игры [spring_green2]"Морской Бой"[/spring_green2], '
+		'анализирующая поле противника для предугадывания самых выгодных ходов.',
+		highlight=True,
+		title="[light_goldenrod1]Sea Battle Helper[/light_goldenrod1]",
+		width=60
+	)
 	
 	while True:
-		os.system("cls")
+		os.system("mode con cols=61 lines=38")
+		console.clear()
 		
-		print(Panel(
-			'Программа-помощник для игры [spring_green2]"Морской Бой"[/spring_green2], '
-			'анализирующая поле противника для предугадывания самых выгодных ходов.',
-			highlight=True,
-			title="[light_goldenrod1]Sea Battle Helper[/light_goldenrod1]",
-			width=60
-		))
-		
+		# Очистка и заполнение таблицы
 		helper.clear_area()
 		helper.fill_area()
 		
+		# Вывод хедера
+		print(header_panel)
+		
+		# Вывод таблицы
 		tools.print_pretty_area(helper, "[light_goldenrod1]Таблица вероятностей[/light_goldenrod1]")
 		
-		max_cells = helper.find_max()[0]
 		
-		human_max_cells = list(map(helper.humanize_cell, max_cells))
-		inp_default = human_max_cells[0]
+		max_cells = helper.find_max()[0] # Клетки с наибольшей вероятностью
+		human_max_cells = list(map(helper.humanize_cell, max_cells)) # Те же клетки, но в "человеческом" виде
+		inp_default = human_max_cells[0] # Значение по умолчанию для запроса целевой клетки
 		
+		
+		# Вывод клеток с наибольшей вероятностью
 		print(Padding(
 			Panel(
 				Align(
@@ -95,6 +107,8 @@ if __name__ == "__main__":
 			pad=(1, 0, 1, 1)
 		))
 		
+		
+		# Вывод оставшегося количества кораблей
 		ships = [" Осталось кораблей:"]
 		for i in range(3, -1, -1):
 			alive = helper.ships_alive[i]
@@ -106,9 +120,10 @@ if __name__ == "__main__":
 				f"{helper.ships_count[i]}"  # количество кораблей
 				f"{'[/red]' if not alive else ''}"  # закрывающий тег с цветом мёртвого корабля и ":"
 			)
-		
 		print("\n".join(ships) + "\n\n")
 		
+		
+		# Запрос целевой клетки
 		target_cell = tools.choice_of_variants(
 			" Клетка для выстрела",
 			human_cells,
@@ -116,8 +131,10 @@ if __name__ == "__main__":
 			show_default=True,
 			upper_input=True
 		)
-		coords = helper.cell_to_coords(target_cell)
+		coords = helper.cell_to_coords(target_cell) # Координаты целевой клетки
 		
+		
+		# Попал ли игрок
 		damage = tools.choice_of_variants(
 			" Попал? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
 			["д", "да", "1", "н", "нет", "0"],
@@ -126,7 +143,9 @@ if __name__ == "__main__":
 			lower_input=True
 		) in "да1"
 		
-		if damage:
+		
+		if damage: # Попадание
+			# Был ли убит вражеский корабль этим попаданием
 			kill = tools.choice_of_variants(
 				" Убил? ([spring_green2]Да[/spring_green2] / [spring_green2]Нет[/spring_green2])",
 				["д", "да", "1", "н", "нет", "0"],
@@ -136,7 +155,7 @@ if __name__ == "__main__":
 			) in "да1"
 			
 			helper.hit(*coords, kill)
-		else:
+		else: # Промах
 			helper.miss(*coords)
 		
 		

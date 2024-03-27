@@ -23,7 +23,7 @@ def print_pretty_area(helper: SeaBattleHelper, header: str) -> None:
 		["#"] + helper.headers,
 		tablefmt="simple",
 		showindex=[i + 1 for i in range(helper.width)],
-		colalign=["center"] + ["right"] * 10,
+		colalign=["left"] + ["right"] * 10,
 		maxcolwidths=3
 	)
 	
