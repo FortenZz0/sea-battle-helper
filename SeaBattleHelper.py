@@ -30,8 +30,9 @@ class SeaBattleHelper:
 		# [1] - отформатированный символ (на него заменяется [0] ПОСЛЕ создания таблицы)
 		self.symbols = {
 			"miss": ("O", "[bright_black]О[/bright_black]"),
-			"hit": ("X", "[gold1]X[/gold1]")
+			"hit": ("X", "[light_goldenrod1]X[/light_goldenrod1]")
 		}
+		
 		self.max_chance_format = (
 			lambda x: "@" * len(str(x)),
 			lambda x: f"[red]{x}[/red]"

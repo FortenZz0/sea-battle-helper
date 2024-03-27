@@ -10,8 +10,8 @@ from SeaBattleHelper import SeaBattleHelper
 import tools
 
 
+
 if __name__ == "__main__":
-	
 	print(" По умолчанию программа настроена на:")
 	print("  - 1 4-палубный корабль")
 	print("  - 2 3-палубных корабля")
@@ -68,14 +68,14 @@ if __name__ == "__main__":
 			'Программа-помощник для игры [spring_green2]"Морской Бой"[/spring_green2], '
 			'анализирующая поле противника для предугадывания самых выгодных ходов.',
 			highlight=True,
-			title="[gold1]Sea Battle Helper[/gold1]",
+			title="[light_goldenrod1]Sea Battle Helper[/light_goldenrod1]",
 			width=60
 		))
 		
 		helper.clear_area()
 		helper.fill_area()
 		
-		tools.print_pretty_area(helper, "[gold1]Таблица вероятностей[/gold1]")
+		tools.print_pretty_area(helper, "[light_goldenrod1]Таблица вероятностей[/light_goldenrod1]")
 		
 		max_cells = helper.find_max()[0]
 		
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 					"[spring_green2]" + " ".join(human_max_cells) + "[/spring_green2]",
 					align="center"
 				),
-				title="[gold1]Наибольшая вероятность[/gold1]",
+				title="[light_goldenrod1]Наибольшая вероятность[/light_goldenrod1]",
 				highlight=True,
 				width=58
 			),
@@ -99,9 +99,9 @@ if __name__ == "__main__":
 		for i in range(3, -1, -1):
 			alive = helper.ships_alive[i]
 			ships.append(
-				f" [{'gold1' if alive else 'red'}]"  # Открывающий тег с цветом
+				f" [{'light_goldenrod1' if alive else 'red'}]"  # Открывающий тег с цветом
 				f"{' '.join(['X' for _ in range(helper.ships_cells[i])])}"  # Визуализация корабля
-				f"[/{'gold1' if alive else 'red'}]: "  # Закрывающий тег с цветом и ":"
+				f"[/{'light_goldenrod1' if alive else 'red'}]: "  # Закрывающий тег с цветом и ":"
 				f"{'[red]' if not alive else ''}"  # открывающий тег с цветом мёртвого корабля
 				f"{helper.ships_count[i]}"  # количество кораблей
 				f"{'[/red]' if not alive else ''}"  # закрывающий тег с цветом мёртвого корабля и ":"
