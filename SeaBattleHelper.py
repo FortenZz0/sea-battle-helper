@@ -22,6 +22,7 @@ class SeaBattleHelper:
 		self._checked_hit_cells = set()
 		
 		self.biggest_ship = lambda: max(compress(self.ships_cells, self.ships_alive))
+		self.lowest_ship = lambda: min(compress(self.ships_cells, self.ships_alive))
 		self.alive_ships = lambda: compress(self.ships_cells, self.ships_alive)
 		
 		self.headers = list("АБВГДЕЖЗИК")
@@ -193,6 +194,8 @@ class SeaBattleHelper:
 		# Заполняем поле относительно попаданий
 		self.update_hits()
 		
+		# return None
+		
 		# Заполняем поле, расставляя корабли
 		for ship in compress(self.ships_cells, self.ships_alive):
 			for y in range(self.height):
@@ -266,6 +269,9 @@ class SeaBattleHelper:
 				cells.append((new_x, new_y))
 			else:
 				break
+		
+		if len(cells) < self.lowest_ship() - 1:
+			return []
 		
 		return cells
 	
