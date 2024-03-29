@@ -21,9 +21,9 @@ class SeaBattleHelper:
 		self._damaged_ships = []
 		self._checked_hit_cells = set()
 		
-		self.biggest_ship = lambda: max(compress(self.ships_cells, self.ships_alive))
-		self.lowest_ship = lambda: min(compress(self.ships_cells, self.ships_alive))
-		self.alive_ships = lambda: compress(self.ships_cells, self.ships_alive)
+		self.get_biggest_ship = lambda: max(compress(self.ships_cells, self.ships_alive))
+		self.get_lowest_ship = lambda: min(compress(self.ships_cells, self.ships_alive))
+		self.get_alive_ships_cells = lambda: compress(self.ships_cells, self.ships_alive)
 		
 		self.headers = list("АБВГДЕЖЗИК")
 		
@@ -83,7 +83,7 @@ class SeaBattleHelper:
 				if not self.area[cell[1]][cell[0]].isdigit():
 					continue
 				
-				add_value = self.biggest_ship() - self._distance(cell, hit_cells[0])
+				add_value = self.get_biggest_ship() - self._distance(cell, hit_cells[0])
 				self.area[cell[1]][cell[0]] = str(int(self.area[cell[1]][cell[0]]) + add_value * 10)
 		
 		
@@ -256,7 +256,7 @@ class SeaBattleHelper:
 	                    pass_miss: bool = False) -> [(int, int)]:
 		cells = []
 		
-		for i in range(1, self.biggest_ship()):
+		for i in range(1, self.get_biggest_ship()):
 			new_x = x + direction[0] * i
 			new_y = y + direction[1] * i
 			
@@ -270,7 +270,7 @@ class SeaBattleHelper:
 			else:
 				break
 		
-		if len(cells) < self.lowest_ship() - 1:
+		if len(cells) < self.get_lowest_ship() - 1:
 			return []
 		
 		return cells
