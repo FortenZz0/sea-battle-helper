@@ -118,7 +118,7 @@ if __name__ == "__main__":
 			
 			# Вывод оставшегося количества кораблей
 			ships = [" Осталось кораблей:"]
-			for i in range(len(helper.ships_alive)-1, -2, -1):
+			for i in range(len(helper.ships_alive)-1, -1, -1):
 				alive = helper.ships_alive[i]
 				ships.append(
 					f" [{'light_goldenrod1' if alive else 'red'}]"  # Открывающий тег с цветом
